@@ -27,3 +27,7 @@ final class User: Model	{
 		self.username = username
 	}
 }
+
+extension User: Content	{
+	
+}
