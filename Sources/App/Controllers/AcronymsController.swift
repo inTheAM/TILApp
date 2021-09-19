@@ -20,7 +20,7 @@ struct AcronymsController: RouteCollection {
 		acronymsRoutes.get("first", use: getFirstHandler)
 		acronymsRoutes.get("last", use: getLastHandler)
 		acronymsRoutes.get("sorted", use: getSortedHandler)
-		acronymsRoutes.get(":acronymID", "user", use: getUserHandler)
+		acronymsRoutes.get(":acronymID", "user", use: getHandler)
 	}
 	
 	func getAllHandler(_ req: Request) -> EventLoopFuture<[Acronym]>	{
