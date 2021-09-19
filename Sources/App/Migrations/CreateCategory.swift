@@ -17,6 +17,6 @@ struct CreateCategory: Migration	{
 	
 	func revert(on database: Database) -> EventLoopFuture<Void> {
 		database.schema("categories")
-			.delete()ç
+			.delete()
 	}
 }
