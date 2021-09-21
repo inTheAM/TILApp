@@ -14,6 +14,7 @@ struct CategoriesController: RouteCollection	{
 		categoriesRoute.post(use: createHandler)
 		categoriesRoute.get(use: getAllHandler)
 		categoriesRoute.get(":categoryID", use: getHandler)
+		categoriesRoute.get(":categoryID", "acronyms", use: getAcronymsHandler)
 	}
 	
 	func createHandler(_ req: Request) throws -> EventLoopFuture<Category> {
@@ -32,5 +33,13 @@ struct CategoriesController: RouteCollection	{
 		let categoryID = req.parameters.get("categoryID", as: UUID.self)
 		return Category.find(categoryID, on: req.db)
 			.unwrap(or: Abort(.notFound))
+	}
+	func getAcronymsHandler(_ req: Request) -> EventLoopFuture<[Acronym]> {
+		let categoryID = req.parameters.get("categoryID", as: UUID.self)
+		return Category.find(categoryID, on: req.db)
+			.unwrap(or: Abort(.notFound))
+			.flatMap { category in
+				category.$acronyms.get(on: req.db)
+			}
 	}
 }

@@ -21,7 +21,9 @@ struct AcronymsController: RouteCollection {
 		acronymsRoutes.get("last", use: getLastHandler)
 		acronymsRoutes.get("sorted", use: getSortedHandler)
 		acronymsRoutes.get(":acronymID", "user", use: getHandler)
+		acronymsRoutes.get(":acronymID", "categories", use: getCategoriesHandler)
 		acronymsRoutes.post(":acronymID", "categories", ":categoryID", use: addCategoriesHandler)
+		acronymsRoutes.delete(":acronymID", "categories", ":categoryID", use: removeCategoryHandler)
 	}
 	
 	func getAllHandler(_ req: Request) -> EventLoopFuture<[Acronym]>	{
@@ -121,10 +123,10 @@ struct AcronymsController: RouteCollection {
 	
 	func addCategoriesHandler(_ req: Request) -> EventLoopFuture<HTTPStatus> {
 		let acronymID = req.parameters.get("acronymID", as: UUID.self)
+		let categoryID = req.parameters.get("categoryID", as: UUID.self)
+		
 		let acronymQuery = Acronym.find(acronymID, on: req.db)
 			.unwrap(or: Abort(.notFound))
-		
-		let categoryID = req.parameters.get("categoryID", as: UUID.self)
 		let categoryQuery = Category.find(categoryID, on: req.db)
 			.unwrap(or: Abort(.notFound))
 		
@@ -136,6 +138,33 @@ struct AcronymsController: RouteCollection {
 			}
 		
 		
+	}
+	
+	func getCategoriesHandler(_ req: Request) -> EventLoopFuture<[Category]>	{
+		let acronymID = req.parameters.get("acronymID", as: UUID.self)
+		return Acronym.find(acronymID, on: req.db)
+			.unwrap(or: Abort(.notFound))
+			.flatMap { acronym in
+				acronym.$categories.query(on: req.db)
+					.all()
+			}
+	}
+	
+	func removeCategoryHandler(_ req: Request) -> EventLoopFuture<HTTPStatus> {
+		let acronymID = req.parameters.get("acronymID", as: UUID.self)
+		let categoryID = req.parameters.get("categoryID", as: UUID.self)
+		
+		let acronymQuery = Acronym.find(acronymID, on: req.db)
+			.unwrap(or: Abort(.notFound))
+		let categoryQuery = Category.find(categoryID, on: req.db)
+			.unwrap(or: Abort(.notFound))
+		
+		return acronymQuery.and(categoryQuery)
+			.flatMap { acronym, category in
+				acronym.$categories
+					.detach(category, on: req.db)
+					.transform(to: .noContent)
+			}
 	}
 }
 
