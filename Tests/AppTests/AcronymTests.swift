@@ -98,7 +98,7 @@ final class AcronymTests: XCTestCase {
 
     try app.test(.GET, acronymsURI, afterResponse: { response in
       let newAcronyms = try response.content.decode([Acronym].self)
-      XCTAssertEqual(newAcronyms.count, 0)
+		XCTAssertEqual(newAcronyms.count, 0)
     })
   }
 
