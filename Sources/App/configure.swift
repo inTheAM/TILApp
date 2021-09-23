@@ -1,5 +1,6 @@
 import Fluent
 import FluentPostgresDriver
+import Leaf
 import Vapor
 
 // configures your application
@@ -35,6 +36,7 @@ public func configure(_ app: Application) throws {
 	
 	app.logger.logLevel = .debug
 	try app.autoMigrate().wait()
+    app.views.use(.leaf)
 	
     // register routes
     try routes(app)
