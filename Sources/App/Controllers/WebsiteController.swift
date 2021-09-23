@@ -13,6 +13,7 @@ struct WebsiteController: RouteCollection {
         routes.get(use: indexHandler)
         routes.get("acronyms", ":acronymID", use: acronymHandler)
         routes.get("users", ":userID", use: userHandler)
+        routes.get("users", use: allusersHandler)
     }
     
     func indexHandler(_ req: Request) -> EventLoopFuture<View> {
@@ -50,6 +51,14 @@ struct WebsiteController: RouteCollection {
                     }
             }
     }
+    func allusersHandler(_ req: Request) -> EventLoopFuture<View> {
+        return User.query(on: req.db)
+            .all()
+            .flatMap { users  in
+                let context = AllUsersContext(title: "Users", users: users)
+                return req.view.render("allUsers", context)
+            }
+    }
 }
 
 struct IndexContext: Encodable {
@@ -67,4 +76,9 @@ struct UserContext: Encodable {
     let title: String
     let user: User
     let acronyms: [Acronym]
+}
+
+struct AllUsersContext: Encodable {
+    let title: String
+    let users: [User]
 }
