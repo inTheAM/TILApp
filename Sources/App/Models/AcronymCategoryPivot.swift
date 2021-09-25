@@ -6,9 +6,9 @@
 //
 
 import Fluent
-import Foundation
+import Vapor
 
-final class AcronymCategoryPivot: Model	{
+final class AcronymCategoryPivot: Model, Content	{
 	static let schema = "acronym-category-pivot"
 	
 	@ID
