@@ -37,11 +37,14 @@ struct WebsiteController: RouteCollection {
         return Acronym.find(acronymID, on: req.db)
             .unwrap(or: Abort(.notFound))
             .flatMap { acronym in
-                acronym.$user.get(on: req.db)
-                    .flatMap { user in
-                        let context = AcronymContext(title: acronym.short, acronym: acronym, user: user)
+                let userFuture = acronym.$user.get(on: req.db)
+                let categoriesFuture = acronym.$categories.query(on: req.db).all()
+                
+                return userFuture.and(categoriesFuture)
+                    .flatMap { user, categories in
+                        let context = AcronymContext(title: acronym.short, acronym: acronym, user: user, categories: categories)
                         return req.view.render("acronym", context)
-                    }
+                }
             }
     }
     
@@ -127,13 +130,16 @@ struct WebsiteController: RouteCollection {
         
         return acronymFuture.and(userQuery)
             .flatMap { acronym, users in
-                let context = EditAcronymContext(acronym: acronym, users: users)
-                return req.view.render("createAcronym", context)
+                acronym.$categories.get(on: req.db)
+                    .flatMap { categories in
+                        let context = EditAcronymContext(acronym: acronym, users: users, categories: categories)
+                        return req.view.render("createAcronym", context)
+                    }
             }
     }
     
     func editAcronymPostHandler(_ req: Request)  throws -> EventLoopFuture<Response> {
-        let updateData = try req.content.decode(CreateAcronymData.self)
+        let updateData = try req.content.decode(CreateAcronymFormData.self)
         let acronymID = req.parameters.get("acronymID", as: UUID.self)
         
         return Acronym.find(acronymID, on: req.db)
@@ -149,7 +155,28 @@ struct WebsiteController: RouteCollection {
                 }
                 let redirect = req.redirect(to: "/acronyms/\(id)")
                 return acronym.save(on: req.db)
-                    .transform(to: redirect)
+                    .flatMap {
+                        acronym.$categories.get(on: req.db)
+                    }.flatMap { existingCategories in
+                        let existingStringArray = existingCategories.map { $0.name }
+                        let existingSet = Set<String>(existingStringArray)
+                        let newSet = Set<String>(updateData.categories ?? [])
+                        let categoriesToAdd = newSet.subtracting(existingSet)
+                        let categoriesToRemove = existingSet.subtracting(newSet)
+                        
+                        var categoryResults: [EventLoopFuture<Void>] = []
+                        
+                        for newCategory in categoriesToAdd {
+                            categoryResults.append(Category.addCategory(newCategory, to: acronym, on: req))
+                        }
+                        for categoryToDel in categoriesToRemove {
+                            if let categoryToRemove = existingCategories.first(where: { $0.name == categoryToDel }) {
+                                categoryResults.append(acronym.$categories.detach(categoryToRemove, on: req.db))
+                            }
+                        }
+                        return categoryResults.flatten(on: req.eventLoop)
+                            .transform(to: redirect)
+                    }
             }
     }
     
@@ -174,6 +201,7 @@ extension WebsiteController {
         let title: String
         let acronym: Acronym
         let user: User
+        let categories: [Category]
     }
     
     struct CategoryContext: Encodable {
@@ -207,6 +235,7 @@ extension WebsiteController {
         let title = "Edit acronym"
         let acronym: Acronym
         let users: [User]
+        let categories: [Category]
         let editing = true
     }
     
