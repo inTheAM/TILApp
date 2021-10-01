@@ -94,7 +94,9 @@ final class AcronymTests: XCTestCase {
       XCTAssertEqual(acronyms.count, 1)
     })
 
-    try app.test(.DELETE, "\(acronymsURI)\(acronym.id!)")
+    try app.test(.DELETE, "\(acronymsURI)\(acronym.id!)") { response in
+        XCTAssertEqual(response.status, .noContent)
+    }
 
     try app.test(.GET, acronymsURI, afterResponse: { response in
       let newAcronyms = try response.content.decode([Acronym].self)
