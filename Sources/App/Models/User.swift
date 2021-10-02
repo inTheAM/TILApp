@@ -35,6 +35,41 @@ final class User: Model	{
 	}
 }
 
+extension User {
+    struct Public: Content {
+        var id: UUID?
+        var name: String
+        var username: String
+    }
+    func convertToPublic() -> User.Public {
+        return .init(id: id, name: name, username: username)
+    }
+}
+
 extension User: Content	{
 	
+}
+
+extension EventLoopFuture where Value: User {
+    func convertToPublic() -> EventLoopFuture<User.Public> {
+        self.map { user in
+            user.convertToPublic()
+        }
+    }
+}
+
+extension EventLoopFuture where Value == Array<User> {
+    func convertToPublic() -> EventLoopFuture<[User.Public]> {
+        self.map { user in
+            user.convertToPublic()
+        }
+    }
+}
+
+extension Collection where Element: User {
+    func convertToPublic() -> [User.Public] {
+        self.map { user in
+            user.convertToPublic()
+        }
+    }
 }

@@ -113,12 +113,13 @@ struct AcronymsController: RouteCollection {
 			.all()
 	}
 	
-	func getUserHandler(_ req: Request) -> EventLoopFuture<User>	{
+    func getUserHandler(_ req: Request) -> EventLoopFuture<User.Public>	{
 		let acronymID = req.parameters.get("acronymID", as: UUID.self)
 		return Acronym.find(acronymID, on: req.db)
 			.unwrap(or: Abort(.notFound))
 			.flatMap { acronym in
 				acronym.$user.get(on: req.db)
+                    .convertToPublic()
 			}
 	}
 	

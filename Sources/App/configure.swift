@@ -34,7 +34,7 @@ public func configure(_ app: Application) throws {
 	app.migrations.add(CreateAcronym())
 	app.migrations.add(CreateCategory())
 	app.migrations.add(CreateAcronymCategoryPivot())
-	
+    try app.autoRevert().wait()
 	app.logger.logLevel = .debug
 	try app.autoMigrate().wait()
     app.views.use(.leaf)
