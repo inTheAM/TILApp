@@ -11,6 +11,7 @@ import XCTVapor
 final class UserTests: XCTestCase {
 	let testName = "Alice"
 	let testUsername = "alice"
+    let testPassword = "alice1234"
 	let usersURL = "/api/users/"
 	var app: Application!
 	
@@ -19,7 +20,7 @@ final class UserTests: XCTestCase {
 	}
 	
 	func testUserCanBeSavedWithAPI() throws {
-		let user = User(name: testName, username: testUsername)
+		let user = User(name: testName, username: testUsername, password: testPassword)
 		
 		try app.test(.POST, usersURL, beforeRequest: { request in
 			try request.content.encode(user)

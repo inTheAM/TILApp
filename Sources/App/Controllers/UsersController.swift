@@ -19,6 +19,7 @@ struct UsersController: RouteCollection	{
 	
 	func createHandler(_ req:	Request) throws ->	EventLoopFuture<User> {
 		let user = try req.content.decode(User.self)
+        user.password = try Bcrypt.hash(user.password)
 		
 		return user.save(on: req.db)
 			.map {

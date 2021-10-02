@@ -19,15 +19,19 @@ final class User: Model	{
 	
 	@Field(key: "username")
 	var username: String
+    
+    @Field(key: "password")
+    var password: String
 	
 	@Children(for: \.$user)
 	var acronyms: [Acronym]
 	
 	init() {}
 	
-	init(id: UUID? = nil, name: String, username: String)	{
+    init(id: UUID? = nil, name: String, username: String, password: String)	{
 		self.name = name
 		self.username = username
+        self.password = password
 	}
 }
 
