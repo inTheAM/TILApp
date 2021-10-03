@@ -11,7 +11,6 @@ struct UsersController: RouteCollection	{
 	func boot(routes: RoutesBuilder) throws {
 		let usersRoute = routes.grouped("api", "users")
 		
-		usersRoute.post(use: createHandler)
 		usersRoute.get(use: getAllHandler)
 		usersRoute.get(":userID", use: getHandler)
 		usersRoute.get(":userID", "acronyms", use: getAcronymsHandler)
@@ -19,6 +18,11 @@ struct UsersController: RouteCollection	{
         let basicAuthMiddleware = User.authenticator()
         let basicAuthGroup = usersRoute.grouped(basicAuthMiddleware)
         basicAuthGroup.post("login", use: loginHandler)
+        
+        let tokenAuthMiddleware = Token.authenticator()
+        let guardAuthMiddleware = User.guardMiddleware()
+        let tokenAuthGroup = usersRoute.grouped(tokenAuthMiddleware, guardAuthMiddleware)
+        tokenAuthGroup.post(use: createHandler)
 	}
     
     func loginHandler(_ req: Request) throws -> EventLoopFuture<Token> {

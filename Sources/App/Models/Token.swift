@@ -36,3 +36,11 @@ extension Token {
     }
 }
 
+extension Token: ModelTokenAuthenticatable {
+    static let valueKey = \Token.$value
+    static let userKey = \Token.$user
+    
+    var isValid: Bool {
+        true
+    }
+}
