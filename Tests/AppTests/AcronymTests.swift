@@ -39,7 +39,7 @@ final class AcronymTests: XCTestCase {
         let user = try User.create(on: app.db)
         let createAcronymData = CreateAcronymData(short: acronymShort, long: acronymLong)
         
-        try app.test(.POST, acronymsURI, beforeRequest: { request in
+        try app.test(.POST, acronymsURI, loggedInUser: user, beforeRequest: { request in
             try request.content.encode(createAcronymData)
         }, afterResponse: { response in
             let receivedAcronym = try response.content.decode(Acronym.self)
