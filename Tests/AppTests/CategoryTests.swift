@@ -36,7 +36,7 @@ final class CategoryTests: XCTestCase {
   func testCategoryCanBeSavedWithAPI() throws {
     let category = Category(name: categoryName)
 
-    try app.test(.POST, categoriesURI, beforeRequest: { request in
+      try app.test(.POST, categoriesURI, loggedInRequest: true, beforeRequest: { request in
       try request.content.encode(category)
     }, afterResponse: { response in
       let receivedCategory = try response.content.decode(Category.self)
