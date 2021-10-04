@@ -37,7 +37,7 @@ public func configure(_ app: Application) throws {
     app.migrations.add(CreateToken())
     app.migrations.add(CreateAdminUser())
     
-//    try app.autoRevert().wait()
+    try app.autoRevert().wait()
 	app.logger.logLevel = .debug
 	try app.autoMigrate().wait()
     app.views.use(.leaf)

@@ -11,7 +11,6 @@ import XCTVapor
 final class UserTests: XCTestCase {
 	let testName = "Alice"
 	let testUsername = "alice"
-    let testPassword = "alice1234"
 	let usersURL = "/api/users/"
 	var app: Application!
 	
@@ -20,23 +19,23 @@ final class UserTests: XCTestCase {
 	}
 	
 	func testUserCanBeSavedWithAPI() throws {
-		let user = User(name: testName, username: testUsername, password: testPassword)
+		let user = User(name: testName, username: testUsername, password: "password")
 		
-		try app.test(.POST, usersURL, beforeRequest: { request in
+        try app.test(.POST, usersURL, loggedInRequest: true, beforeRequest: { request in
 			try request.content.encode(user)
 		}, afterResponse: { response in
-			let receivedUser = try response.content.decode(User.self)
+            let receivedUser = try response.content.decode(User.Public.self)
 			
 			XCTAssertEqual(receivedUser.name, testName)
 			XCTAssertEqual(receivedUser.username, testUsername)
 			XCTAssertNotNil(receivedUser.id)
 			
-			try app.test(.GET, usersURL) { response in
-				let users = try response.content.decode([User].self)
-				XCTAssertEqual(users.count, 1)
-				XCTAssertEqual(users[0].name, testName)
-				XCTAssertEqual(users[0].username, testUsername)
-				XCTAssertEqual(users[0].id, receivedUser.id)
+			try app.test(.GET, usersURL) { secondResponse in
+                let users = try secondResponse.content.decode([User.Public].self)
+				XCTAssertEqual(users.count, 2)
+				XCTAssertEqual(users[1].name, testName)
+				XCTAssertEqual(users[1].username, testUsername)
+				XCTAssertEqual(users[1].id, receivedUser.id)
 			}
 		})
 		
@@ -50,24 +49,20 @@ final class UserTests: XCTestCase {
 		try app.test(.GET, usersURL)	{ response in
 			XCTAssertEqual(response.status, .ok)
 
-			let users = try response.content.decode([User].self)
+            let users = try response.content.decode([User.Public].self)
 
-			XCTAssertEqual(users.count, 2)
-			XCTAssertEqual(users[0].name, testName)
-			XCTAssertEqual(users[0].username, testUsername)
-			XCTAssertEqual(users[0].id, user.id)
+			XCTAssertEqual(users.count, 3)
+			XCTAssertEqual(users[1].name, testName)
+			XCTAssertEqual(users[1].username, testUsername)
+			XCTAssertEqual(users[1].id, user.id)
 		}
-	}
-	
-	override func tearDownWithError() throws {
-		app.shutdown()
 	}
 	
 	func testGettingSingleUserFromAPI()	throws {
 		let user = try User.create(name: testName, username: testUsername, on: app.db)
 		
 		try app.test(.GET, usersURL + "\(user.id!)") { response in
-			let receivedUser = try response.content.decode(User.self)
+            let receivedUser = try response.content.decode(User.Public.self)
 			
 			XCTAssertEqual(receivedUser.name, testName)
 			XCTAssertEqual(receivedUser.username, testUsername)
@@ -92,5 +87,9 @@ final class UserTests: XCTestCase {
 			XCTAssertEqual(acronyms[0].id, acronym1.id)
 		}
 	}
+    
+    override func tearDownWithError() throws {
+        app.shutdown()
+    }
 
 }
